@@ -11,13 +11,19 @@ import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 
 // ── Schemas de validação ───────────────────────────────────────
+function validarCPF(cpf: string) {
+  cpf = cpf.replace(/[^\d]+/g, "");
+  if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+  const cpfArr = cpf.split("").map((el) => +el);
+  const rest = (count: number) =>
+    ((cpfArr.slice(0, count - 12).reduce((soma, el, index) => soma + el * (count - index), 0) * 10) % 11) % 10;
+  return rest(10) === cpfArr[9] && rest(11) === cpfArr[10];
+}
 
 const cadastroSchema = z
   .object({
     nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-    cpf: z
-      .string()
-      .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido"),
+    cpf: z.string().refine(validarCPF, "CPF inválido ou inexistente"), 
     email: z.string().email("E-mail inválido"),
     senha: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
     confirmarSenha: z.string(),
@@ -127,4 +133,10 @@ export async function loginUsuario(
   }
 
   return { success: true, message: "Login realizado!" };
+}
+
+import { signOut } from "@/lib/auth"; // Adicione isso no topo junto com os outros imports se não tiver
+
+export async function logoutUsuario() {
+  await signOut({ redirectTo: "/" });
 }

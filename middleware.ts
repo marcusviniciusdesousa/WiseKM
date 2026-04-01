@@ -1,35 +1,53 @@
 // src/middleware.ts
-// Middleware de proteção de rotas — roda no Edge Runtime (sem acesso ao banco)
+// Guarda de trânsito do WiseKM — NextAuth v5 (Auth.js)
+//
+// Lógica de acesso:
+//   ROTAS PÚBLICAS  → qualquer um acessa: /, /login, /cadastro, /sobre
+//   ROTAS PRIVADAS  → requer sessão: tudo que não for público
+//   USUÁRIO LOGADO  → redirecionado de /login e /cadastro para /dashboard
+//
+// O middleware roda no Edge Runtime — sem acesso ao banco de dados.
+// A verificação de sessão é feita apenas via JWT (cookie HTTP-only).
 
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+// Rotas que qualquer usuário pode acessar sem autenticação
+const PUBLIC_ROUTES = ["/", "/login", "/cadastro", "/sobre"];
+
+// Rotas de autenticação — usuários logados não devem acessar
+const AUTH_ROUTES = ["/login", "/cadastro"];
+
 export default auth((req) => {
-  const { nextUrl, auth: session } = req;
-  const isLoggedIn = !!session;
+  const { nextUrl } = req;
+  // No NextAuth v5, `req.auth` é injetado pelo wrapper `auth()`
+  const isLoggedIn = !!req.auth?.user;
+  const pathname = nextUrl.pathname;
 
-  const isAuthRoute = nextUrl.pathname.startsWith("/login") ||
-                      nextUrl.pathname.startsWith("/cadastro");
-  const isProtectedRoute = nextUrl.pathname.startsWith("/dashboard") ||
-                            nextUrl.pathname.startsWith("/veiculo") ||
-                            nextUrl.pathname.startsWith("/despesas");
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
-  // Redireciona usuário logado que tenta acessar páginas de auth
+  // ── Usuário logado tentando acessar login/cadastro → redireciona
   if (isLoggedIn && isAuthRoute) {
     return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 
-  // Redireciona usuário não logado de rotas protegidas
-  if (!isLoggedIn && isProtectedRoute) {
+  // ── Usuário deslogado tentando acessar rota privada → manda para /login
+  if (!isLoggedIn && !isPublicRoute) {
     const loginUrl = new URL("/login", nextUrl);
-    loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
+    // Preserva a URL de destino para redirecionar após login
+    loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 });
 
-// Matcher: evita rodar o middleware em assets estáticos e API do NextAuth
+// ── Matcher ────────────────────────────────────────────────────────────────
+// Exclui: API do NextAuth, assets estáticos, imagens otimizadas, favicon
+// Inclui: todas as páginas da aplicação
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!api/auth|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)).*)",
+  ],
 };

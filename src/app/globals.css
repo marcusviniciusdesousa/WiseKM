@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+body {
+  background-color: theme('colors.background');
+  color: theme('colors.text-high');
+}

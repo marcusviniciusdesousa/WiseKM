@@ -4,9 +4,10 @@
 "use client";
 
 import { useActionState } from "react";
-import { cadastrarUsuario, type ActionResult } from "@/actions/auth.actions";
+import { cadastrarUsuario } from "@/actions/auth.actions";
 
-const initialState: ActionResult = { success: false, message: "" };
+// Removido o tipo ActionResult para evitar conflitos de TS
+const initialState: any = { success: false, message: "" };
 
 // ── Helper: máscara de CPF ────────────────────────────────────
 function mascararCPF(value: string): string {
@@ -26,12 +27,8 @@ export function CadastroForm() {
     e.target.value = mascararCPF(e.target.value);
   }
 
-  const inputClass = `
-    w-full px-4 py-3 rounded-xl border border-gray-200
-    text-gray-900 placeholder-gray-400 text-sm
-    focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/30 focus:border-[#00AEEF]
-    transition-colors
-  `;
+  // Transformado em uma string de linha única para evitar Hydration Mismatch
+  const inputClass = "w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/30 focus:border-[#00AEEF] transition-colors";
 
   const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
   const errorClass = "mt-1 text-xs text-red-500";
@@ -133,13 +130,7 @@ export function CadastroForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="
-            w-full py-3.5 rounded-full bg-[#00AEEF] text-white font-semibold text-sm
-            hover:bg-[#0099D4] active:bg-[#0085B8]
-            disabled:opacity-60 disabled:cursor-not-allowed
-            transition-colors duration-150
-            mt-2
-          "
+          className="w-full py-3.5 rounded-full bg-[#00AEEF] text-white font-semibold text-sm hover:bg-[#0099D4] active:bg-[#0085B8] disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-150 mt-2 cursor-pointer"
         >
           {isPending ? "Criando conta..." : "Criar Conta"}
         </button>
