@@ -9,24 +9,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Usuario {
-  id        String   @id @default(cuid())
-  nome      String
-  cpf       String   @unique
-  email     String   @unique
-  senha     String   // bcrypt hash — NUNCA armazenar plain text
-  criadoEm DateTime @default(now()) @map("criado_em")
-  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+// ── Enum: Tipo de Veículo ─────────────────────────────────────────────────
+enum TipoVeiculo {
+  CARRO
+  MOTO
+  CAMINHAO
+}
 
-  // Relações futuras (ex: veículos, despesas)
-  // veiculo Veiculo[]
+model Usuario {
+  id           String    @id @default(cuid())
+  nome         String
+  cpf          String    @unique
+  email        String    @unique
+  senha        String    // bcrypt hash — NUNCA armazenar plain text
+  criadoEm    DateTime  @default(now()) @map("criado_em")
+  atualizadoEm DateTime  @updatedAt @map("atualizado_em")
+
+  // 1 usuário → no máximo 1 veículo (garantido pelo @unique em Veiculo.usuarioId)
+  veiculo      Veiculo?
 
   @@map("usuarios")
 }
 
-// ──────────────────────────────────────────────────────────────
+// ── Veículo ───────────────────────────────────────────────────────────────
+model Veiculo {
+  id             String      @id @default(cuid())
+  usuarioId      String      @unique // Trava: 1 veículo por usuário
+  tipo           TipoVeiculo
+
+  // Dados imutáveis vindos da API FIPE — base para todos os cálculos futuros
+  codigoFipe     String
+  marca          String
+  modelo         String
+  ano            String
+  valorFipeAtual Float
+
+  // Hodômetro informado pelo usuário no momento do cadastro
+  quilometragem  Int
+
+  criadoEm      DateTime    @default(now()) @map("criado_em")
+
+  // Cascade: ao deletar o usuário, o veículo é removido automaticamente
+  usuario        Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+// Relacionamento: 1 Veículo possui vários Custos
+  custos         Custo[]
+
+  @@map("veiculos")
+}
+
+// ──────────────────────────────────────────────────────────────────────────
 // Tabela de sessões para NextAuth v5 (Database Strategy)
-// ──────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────────────
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique @map("session_token")
@@ -41,6 +75,37 @@ model VerificationToken {
   token      String   @unique
   expires    DateTime
 
+
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// ── Enum: Categorias de Custo ─────────────────────────────────────────────
+enum CategoriaCusto {
+  MANUTENCAO
+  DOCUMENTACAO
+  SEGURO
+  CONSUMIVEL
+  OUTROS
+}
+
+// ── Custo Mapeado ─────────────────────────────────────────────────────────
+model Custo {
+  id                String         @id @default(cuid())
+  veiculoId         String         @map("veiculo_id")
+  
+  nome              String
+  categoria         CategoriaCusto
+  valorAtual        Float          @map("valor_atual")
+  
+  // A durabilidade pode ser por KM, por tempo (meses) ou ambos
+  durabilidadeKm    Int?           @map("durabilidade_km")
+  durabilidadeMeses Int?           @map("durabilidade_meses")
+
+  criadoEm          DateTime       @default(now()) @map("criado_em")
+  atualizadoEm      DateTime       @updatedAt @map("atualizado_em")
+
+  veiculo           Veiculo        @relation(fields: [veiculoId], references: [id], onDelete: Cascade)
+
+  @@map("custos")
 }
