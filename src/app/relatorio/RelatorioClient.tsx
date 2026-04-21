@@ -28,9 +28,9 @@ type DadosCategoria = {
 
 const CORES_CATEGORIA: Record<string, string> = {
   "MANUTENCAO": "#3B82F6",   // Azul
-  "CONSUMIVEL": "#F59E0B",   // Laranja
+  "COMBUSTIVEL": "#F59E0B",   // Laranja
   "DOCUMENTACAO": "#10B981", // Verde
-  "SEGURO": "#8B5CF6",       // Roxo
+  "CUSTOS_FIXOS": "#8B5CF6",       // Roxo
   "OUTROS": "#6B7280"        // Cinza
 };
 

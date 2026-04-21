@@ -54,7 +54,7 @@ export function CustosHub({ veiculo, nomesCadastrados }: CustosHubProps) {
     return map;
   }, [itensPendentes]);
 
-  const categorias = ["MANUTENCAO", "CONSUMIVEL", "DOCUMENTACAO", "SEGURO"] as CategoriaCatalogo[];
+  const categorias = ["MANUTENCAO", "COMBUSTIVEL", "DOCUMENTACAO", "CUSTOS_FIXOS", "OUTROS"] as CategoriaCatalogo[];
 
   function handleAbrirCategoria(cat: CategoriaCatalogo) {
     if ((grupos.get(cat)?.length || 0) === 0) return; 

@@ -84,8 +84,8 @@ model VerificationToken {
 enum CategoriaCusto {
   MANUTENCAO
   DOCUMENTACAO
-  SEGURO
-  CONSUMIVEL
+  CUSTOS_FIXOS
+  COMBUSTIVEL
   OUTROS
 }
 

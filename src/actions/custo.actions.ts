@@ -3,11 +3,11 @@
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache"; // <-- MUDANÇA 1: Importando o limpador de cache
+import { revalidatePath } from "next/cache";
 
 export interface LoteCustoInput {
   nome: string;
-  categoria: "MANUTENCAO" | "DOCUMENTACAO" | "SEGURO" | "CONSUMIVEL" | "OUTROS";
+  categoria: "MANUTENCAO" | "DOCUMENTACAO" | "CUSTOS_FIXOS" | "COMBUSTIVEL" | "OUTROS";
   valorAtual: number;
   durabilidadeKm: number | null;
   durabilidadeMeses: number | null;
@@ -53,9 +53,9 @@ export async function salvarLoteCustos(custosInput: LoteCustoInput[]) {
       })),
     });
 
-    // <-- MUDANÇA 2: Avisa o Next.js para atualizar a tela de listagem
     revalidatePath("/custos"); 
     revalidatePath("/custos/novo"); 
+    revalidatePath("/relatorio"); // Garante que o dashboard de BI seja atualizado
 
     return { success: true, message: `${custosValidos.length} itens salvos com sucesso.` };
   } catch (error) {
@@ -68,7 +68,7 @@ export async function salvarCustoAvulso(
   dados: {
     id?: string; 
     nome: string;
-    categoria: "MANUTENCAO" | "DOCUMENTACAO" | "SEGURO" | "CONSUMIVEL" | "OUTROS";
+    categoria: "MANUTENCAO" | "DOCUMENTACAO" | "CUSTOS_FIXOS" | "COMBUSTIVEL" | "OUTROS";
     valorAtual: number;
     durabilidadeKm: number | null;
     durabilidadeMeses: number | null;
@@ -105,7 +105,8 @@ export async function salvarCustoAvulso(
           durabilidadeMeses: dados.durabilidadeMeses,
         },
       });
-      revalidatePath("/custos"); // Limpa cache
+      revalidatePath("/custos");
+      revalidatePath("/relatorio");
       return { success: true, message: "Custo atualizado com sucesso." };
     } else {
       await prisma.custo.create({
@@ -118,7 +119,8 @@ export async function salvarCustoAvulso(
           durabilidadeMeses: dados.durabilidadeMeses,
         },
       });
-      revalidatePath("/custos"); // Limpa cache
+      revalidatePath("/custos");
+      revalidatePath("/relatorio");
       return { success: true, message: "Custo adicionado com sucesso." };
     }
   } catch (error) {
@@ -138,7 +140,8 @@ export async function excluirCusto(id: string): Promise<{ success: boolean; mess
       where: { id: id, veiculoId: veiculo.id }, 
     });
     
-    revalidatePath("/custos"); // Limpa cache
+    revalidatePath("/custos");
+    revalidatePath("/relatorio");
     return { success: true, message: "Custo excluído." };
   } catch (error) {
     return { success: false, message: "Falha ao excluir o custo." };
@@ -159,6 +162,7 @@ export async function excluirTodosCustos(): Promise<{ success: boolean; message:
     
     revalidatePath("/custos");
     revalidatePath("/custos/novo");
+    revalidatePath("/relatorio");
 
     return { success: true, message: "Todos os custos foram excluídos." };
   } catch (error) {
