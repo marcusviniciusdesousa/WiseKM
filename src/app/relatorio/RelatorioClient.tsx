@@ -35,7 +35,8 @@ const CORES_CATEGORIA: Record<string, string> = {
 };
 
 export function RelatorioClient({ custos }: { custos: Custo[] }) {
-  const [kmMensal, setKmMensal] = useState<number | "">("");
+  const [kmMensal, setKmMensal] = useState<number | "">(1000); // Alterado default para não vir vazio
+  const [orcamentoMensal, setOrcamentoMensal] = useState<number | "">(""); // Novo Estado
   const [categoriaHover, setCategoriaHover] = useState<string | null>(null);
   const [mensagemGlobal, setMensagemGlobal] = useState<{ texto: string; tipo: "success" | "error" } | null>(null);
 
@@ -54,35 +55,54 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
   const analise = useMemo(() => {
     let custoVariavelPorKm = 0;
     let custoFixoMensalTotal = 0;
-    
-    // Tratamento do input vazio ou zerado
-    const kmSimulado = typeof kmMensal === "number" ? Math.max(0, Math.min(kmMensal, 20000)) : 0;
 
+    // 1. Calcula as taxas base primeiro
+    custos.forEach(custo => {
+      if (custo.durabilidadeKm) {
+        custoVariavelPorKm += (custo.valorAtual / custo.durabilidadeKm);
+      }
+      if (custo.durabilidadeMeses && !custo.durabilidadeKm) {
+        custoFixoMensalTotal += (custo.valorAtual / custo.durabilidadeMeses);
+      }
+    });
+
+    // 2. Determina o KM Simulado (por input direto ou por orçamento)
+    let kmFinal = 0;
+    let alertaOrcamento = "";
+
+    if (orcamentoMensal !== "" && typeof orcamentoMensal === "number") {
+      if (orcamentoMensal < custoFixoMensalTotal) {
+        kmFinal = 0;
+        alertaOrcamento = "O orçamento não cobre os custos fixos mensais do veículo.";
+      } else {
+        const disponivelParaRodar = orcamentoMensal - custoFixoMensalTotal;
+        kmFinal = disponivelParaRodar / (custoVariavelPorKm > 0 ? custoVariavelPorKm : 1);
+      }
+    } else {
+      kmFinal = typeof kmMensal === "number" ? Math.max(0, Math.min(kmMensal, 20000)) : 0;
+    }
+
+    // 3. Calcula o detalhamento baseado no kmFinal decidido
     const detalhamento: DetalheCusto[] = custos.map(custo => {
       let custoPorKmItem = 0;
       let custoFixoMensalItem = 0;
 
-      // Item desgasta por KM
       if (custo.durabilidadeKm) {
         custoPorKmItem = custo.valorAtual / custo.durabilidadeKm;
-        custoVariavelPorKm += custoPorKmItem;
       }
-
-      // Item fixo temporal (Só entra aqui se NÃO tiver durabilidade em KM, ex: Seguro)
       if (custo.durabilidadeMeses && !custo.durabilidadeKm) {
         custoFixoMensalItem = custo.valorAtual / custo.durabilidadeMeses;
-        custoFixoMensalTotal += custoFixoMensalItem;
       }
 
       return {
         ...custo,
         custoPorKmItem,
         custoFixoMensalItem,
-        desgasteMensalSimulado: (custoPorKmItem * kmSimulado) + custoFixoMensalItem
+        desgasteMensalSimulado: (custoPorKmItem * kmFinal) + custoFixoMensalItem
       };
     });
 
-    const gastoVariavelMensal = custoVariavelPorKm * kmSimulado;
+    const gastoVariavelMensal = custoVariavelPorKm * kmFinal;
     const custoTotalMensal = gastoVariavelMensal + custoFixoMensalTotal;
     const custoTotalAnual = custoTotalMensal * 12;
 
@@ -111,14 +131,15 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
       custoTotalMensal,
       custoTotalAnual,
       categorias: categoriasFinal,
-      kmSimulado
+      kmSimulado: kmFinal,
+      alertaOrcamento
     };
-  }, [custos, kmMensal]);
+  }, [custos, kmMensal, orcamentoMensal]);
 
   // ── FUNÇÃO DE EXPORTAÇÃO (WHATSAPP) ──────────────────────────────────
   const handleExportarWhatsapp = () => {
     let texto = `📊 *RESUMO WISEKM - RELATÓRIO*\n`;
-    texto += `🛣️ Simulação: ${analise.kmSimulado} km/mês\n\n`;
+    texto += `🛣️ Simulação: ${analise.kmSimulado.toFixed(0)} km/mês\n\n`;
     texto += `💰 *DADOS GERAIS*\n`;
     texto += `• Custo por KM: ${formatMoeda(analise.custoVariavelPorKm)}/km\n`;
     texto += `• Custos Fixos/Mês: ${formatMoeda(analise.custoFixoMensalTotal)}/mês\n`;
@@ -168,32 +189,77 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
         </div>
       )}
 
-      {/* ── INPUT DE SIMULAÇÃO (MELHOR USABILIDADE) ── */}
+      {/* ── SEÇÃO DE SIMULAÇÃO (NOVO LAYOUT) ── */}
       <div className="bg-surface rounded-2xl border border-border p-6 md:p-8 shadow-sm">
-        <label className="block text-caption font-bold text-text-high mb-3 uppercase tracking-wider">
-          Quantos KM você pretende rodar por mês?
-        </label>
-        <div className="relative max-w-sm">
-          <input
-            type="number" 
-            min="0"
-            max="20000"
-            placeholder="Ex: 1500"
-            value={kmMensal}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === "") setKmMensal("");
-              else if (Number(val) >= 0) setKmMensal(Number(val));
-            }}
-            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-lg font-bold text-text-high focus:ring-2 focus:ring-primary/40 outline-none transition-all pr-14"
-          />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-bold text-text-low">
-            km/mês
-          </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          {/* Input por KM */}
+          <div className="space-y-3">
+            <label className="block text-caption font-bold text-text-high uppercase tracking-wider">
+              Simular por KM Mensal
+            </label>
+            <div className="relative">
+              <input
+                type="number" 
+                min="0"
+                max="20000"
+                placeholder="Ex: 1500"
+                value={kmMensal}
+                onChange={(e) => {
+                  setOrcamentoMensal(""); // Limpa o orçamento se o usuário digitar aqui
+                  const val = e.target.value;
+                  if (val === "") setKmMensal("");
+                  else if (Number(val) >= 0) setKmMensal(Number(val));
+                }}
+                className={`w-full px-4 py-3 rounded-lg border border-border bg-background text-lg font-bold text-text-high focus:ring-2 focus:ring-primary/40 outline-none transition-all pr-14 ${orcamentoMensal !== "" ? "opacity-50" : ""}`}
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-bold text-text-low">
+                km/mês
+              </span>
+            </div>
+            <p className="text-[11px] text-text-low mt-2">
+              Deixe em 0 para ver apenas os custos fixos.
+            </p>
+          </div>
+
+          {/* Input por Orçamento */}
+          <div className="space-y-3">
+            <label className="block text-caption font-bold text-text-high uppercase tracking-wider">
+              Simular por Orçamento (R$)
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-caption font-bold text-text-low">
+                R$
+              </span>
+              <input
+                type="number" 
+                min="0"
+                placeholder="Ex: 800"
+                value={orcamentoMensal}
+                onChange={(e) => {
+                  setKmMensal(""); // Limpa o KM se o usuário digitar aqui
+                  const val = e.target.value;
+                  if (val === "") setOrcamentoMensal("");
+                  else if (Number(val) >= 0) setOrcamentoMensal(Number(val));
+                }}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background text-lg font-bold text-text-high focus:ring-2 focus:ring-primary/40 outline-none transition-all ${kmMensal !== "" ? "opacity-50" : ""}`}
+              />
+            </div>
+            <p className="text-[11px] text-text-low mt-2">
+              Descubra quanto você pode rodar.
+            </p>
+          </div>
+
         </div>
-        <p className="text-[11px] text-text-low mt-2">
-          Deixe em 0 para ver apenas os custos fixos mensais do veículo.
-        </p>
+
+        {/* ALERTA DE ORÇAMENTO INSUFICIENTE */}
+        {analise.alertaOrcamento && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-lg animate-fade-in">
+            <p className="text-sm text-red-600 font-bold flex items-center gap-2">
+              ⚠️ {analise.alertaOrcamento}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── CARDS DE DASHBOARD ── */}
@@ -207,8 +273,13 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
           <h3 className="text-xl font-bold text-text-high">{formatMoeda(analise.custoFixoMensalTotal)}<span className="text-sm font-medium text-text-low">/mês</span></h3>
         </div>
         <div className="bg-primary/5 p-6 rounded-xl border border-primary/20">
-          <p className="text-[10px] font-bold text-primary uppercase mb-1">Simulação (Fixo + Uso)</p>
-          <h3 className="text-xl font-bold text-primary">{formatMoeda(analise.custoTotalMensal)}<span className="text-sm font-medium text-primary/70">/mês</span></h3>
+          <p className="text-[10px] font-bold text-primary uppercase mb-1">
+            {orcamentoMensal !== "" ? "KM Alcançável" : "Simulação (Fixo + Uso)"}
+          </p>
+          <h3 className="text-xl font-bold text-primary">
+            {orcamentoMensal !== "" ? `${analise.kmSimulado.toFixed(0)} km` : formatMoeda(analise.custoTotalMensal)}
+            {orcamentoMensal === "" && <span className="text-sm font-medium text-primary/70">/mês</span>}
+          </h3>
         </div>
         <div className="bg-text-high p-6 rounded-xl border border-text-high">
           <p className="text-[10px] font-bold text-surface/60 uppercase mb-1">Projeção Anual Total</p>
