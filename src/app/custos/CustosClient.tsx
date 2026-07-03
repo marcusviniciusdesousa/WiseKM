@@ -289,9 +289,9 @@ export function CustosClient({ custosIniciais }: { custosIniciais: Custo[] }) {
                   <label className="block text-caption font-semibold text-text-high mb-1.5">Categoria</label>
                   <select value={categoria} onChange={e => setCategoria(e.target.value as CategoriaCusto)} className="w-full px-4 py-3 rounded-md border border-border bg-background text-base">
                     <option value="MANUTENCAO">Manutenção</option>
-                    <option value="CONSUMIVEL">Consumível</option>
+                    <option value="COMBUSTIVEL">Combustivel</option>  
                     <option value="DOCUMENTACAO">Documentação</option>
-                    <option value="SEGURO">Seguro</option>
+                    <option value="CUSTOS_FIXOS">Custos Fixos</option>
                     <option value="OUTROS">Outros</option>
                   </select>
                 </div>

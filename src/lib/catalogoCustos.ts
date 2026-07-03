@@ -18,8 +18,8 @@ export const CATALOGO_MESTRE: ItemCatalogo[] = [
   { idItem: "arla_32", nome: "Arla 32", categoria: "COMBUSTIVEL", sugestaoDurabilidadeKm: 1000, aplicavelA: ["CAMINHAO"] },
   
   // ── Manutenção Preventiva (Itens Comuns e "Esquecidos") ──────────────────
-  { idItem: "pneu_carro", nome: "Pneus (Jogo/Par)", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 40000, aplicavelA: ["CARRO"] },
-  { idItem: "pneu_moto", nome: "Pneus (Kit Traseiro/Dianteiro)", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 15000, aplicavelA: ["MOTO"] },
+  { idItem: "pneu_carro", nome: "Pneus (Par)", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 40000, aplicavelA: ["CARRO"] },
+  { idItem: "pneu_moto", nome: "Pneus (Kit Traseiro e Dianteiro)", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 15000, aplicavelA: ["MOTO"] },
   { idItem: "pneu_caminhao", nome: "Pneus (Eixos/Recapagem)", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 60000, aplicavelA: ["CAMINHAO"] },
   { idItem: "oleo_motor", nome: "Óleo do Motor", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 10000, sugestaoDurabilidadeMeses: 12, aplicavelA: ["CARRO", "MOTO", "CAMINHAO"] },
   { idItem: "filtro_oleo", nome: "Filtro de Óleo", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 10000, sugestaoDurabilidadeMeses: 12, aplicavelA: ["CARRO", "MOTO", "CAMINHAO"] },
