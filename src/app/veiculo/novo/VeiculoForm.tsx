@@ -430,6 +430,7 @@ export function VeiculoForm() {
               placeholder="Ex: 45000"
               value={quilometragem}
               onChange={(e) => setQuilometragem(e.target.value)}
+              onWheel={(e) => (e.target as HTMLElement).blur()}
               required
               className={`${inputClass} pr-12`}
             />

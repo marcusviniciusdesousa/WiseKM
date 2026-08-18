@@ -39,6 +39,7 @@ export function DashboardClient({ veiculo }: { veiculo: Veiculo }) {
 
   // ── Handlers de Ação ────────────────────────────────────────────────────
   async function handleExcluir() {
+    if (isDeletando) return; // Trava contra duplo clique enquanto a Server Action processa
     setIsDeletando(true);
     try {
       const result = await excluirVeiculo();
@@ -56,6 +57,7 @@ export function DashboardClient({ veiculo }: { veiculo: Veiculo }) {
   }
 
   async function handleEditar() {
+    if (isSalvando) return; // Trava contra duplo clique enquanto a Server Action processa
     const kmNum = parseInt(novaKm, 10);
     
     if (isNaN(kmNum) || kmNum < 0) {
@@ -193,6 +195,7 @@ export function DashboardClient({ veiculo }: { veiculo: Veiculo }) {
                 min="0"
                 value={novaKm}
                 onChange={(e) => setNovaKm(e.target.value)}
+                onWheel={(e) => (e.target as HTMLElement).blur()}
                 className="w-full px-4 py-3 rounded-sm border border-border bg-surface text-base text-text-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary pr-12"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-caption text-text-low font-medium">

@@ -34,13 +34,17 @@ const CORES_CATEGORIA: Record<string, string> = {
   "OUTROS": "#6B7280"        // Cinza
 };
 
+// HELPER: Converte a string do Enum para o formato visual "CUSTOS FIXOS"[cite: 21]
+const formatarNomeCategoria = (categoria: string) => {
+  return categoria === "CUSTOS_FIXOS" ? "CUSTOS FIXOS" : categoria;
+};
+
 export function RelatorioClient({ custos }: { custos: Custo[] }) {
-  const [kmMensal, setKmMensal] = useState<number | "">(1000); // Alterado default para não vir vazio
-  const [orcamentoMensal, setOrcamentoMensal] = useState<number | "">(""); // Novo Estado
+  const [kmMensal, setKmMensal] = useState<number | "">(1000); 
+  const [orcamentoMensal, setOrcamentoMensal] = useState<number | "">(""); 
   const [categoriaHover, setCategoriaHover] = useState<string | null>(null);
   const [mensagemGlobal, setMensagemGlobal] = useState<{ texto: string; tipo: "success" | "error" } | null>(null);
 
-  // Fecha o toast automático
   useEffect(() => {
     if (mensagemGlobal) {
       const timer = setTimeout(() => setMensagemGlobal(null), 5000);
@@ -152,8 +156,8 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
       if (cat.totalPorKm > 0) taxas.push(`${formatMoeda(cat.totalPorKm)}/km`);
       if (cat.totalFixoMensal > 0) taxas.push(`${formatMoeda(cat.totalFixoMensal)}/mês`);
       
-      // Junta as taxas (ex: "R$ 0,15/km | R$ 50,00/mês")
-      texto += `• ${cat.nome}: ${taxas.join(" | ")}\n`;
+      // Formata nome da categoria na exportação[cite: 21]
+      texto += `• ${formatarNomeCategoria(cat.nome)}: ${taxas.join(" | ")}\n`;
     });
 
     navigator.clipboard.writeText(texto);
@@ -165,7 +169,7 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
     if (categoriaHover) {
       const cat = analise.categorias.find(c => c.nome === categoriaHover);
       if (cat) return {
-        titulo: cat.nome,
+        titulo: formatarNomeCategoria(cat.nome), // Usando o Helper[cite: 21]
         valor: formatMoeda(cat.totalSimuladoMensal),
         sub: `${cat.percentual.toFixed(1)}% do total`
       };
@@ -206,11 +210,12 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
                 placeholder="Ex: 1500"
                 value={kmMensal}
                 onChange={(e) => {
-                  setOrcamentoMensal(""); // Limpa o orçamento se o usuário digitar aqui
+                  setOrcamentoMensal(""); 
                   const val = e.target.value;
                   if (val === "") setKmMensal("");
                   else if (Number(val) >= 0) setKmMensal(Number(val));
                 }}
+                onWheel={(e) => (e.target as HTMLElement).blur()}
                 className={`w-full px-4 py-3 rounded-lg border border-border bg-background text-lg font-bold text-text-high focus:ring-2 focus:ring-primary/40 outline-none transition-all pr-14 ${orcamentoMensal !== "" ? "opacity-50" : ""}`}
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-bold text-text-low">
@@ -237,11 +242,12 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
                 placeholder="Ex: 800"
                 value={orcamentoMensal}
                 onChange={(e) => {
-                  setKmMensal(""); // Limpa o KM se o usuário digitar aqui
+                  setKmMensal(""); 
                   const val = e.target.value;
                   if (val === "") setOrcamentoMensal("");
                   else if (Number(val) >= 0) setOrcamentoMensal(Number(val));
                 }}
+                onWheel={(e) => (e.target as HTMLElement).blur()}
                 className={`w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background text-lg font-bold text-text-high focus:ring-2 focus:ring-primary/40 outline-none transition-all ${kmMensal !== "" ? "opacity-50" : ""}`}
               />
             </div>
@@ -262,26 +268,28 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
         )}
       </div>
 
-      {/* ── CARDS DE DASHBOARD ── */}
+      {/* ── CARDS DE DASHBOARD ─────────────────────────────────────────────── */}
+      {/* 2 e 3. Tamanho de p-6 para p-8, e hover effect scale/shadow[cite: 21] */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-surface p-6 rounded-xl border border-border">
+        <div className="bg-surface p-8 rounded-xl border border-border transition-all hover:scale-105 hover:shadow-md cursor-default">
           <p className="text-[10px] font-bold text-text-low uppercase mb-1">Custo Variável (Uso)</p>
           <h3 className="text-xl font-bold text-text-high">{formatMoeda(analise.custoVariavelPorKm)}<span className="text-sm font-medium text-text-low">/km</span></h3>
         </div>
-        <div className="bg-surface p-6 rounded-xl border border-border">
+        <div className="bg-surface p-8 rounded-xl border border-border transition-all hover:scale-105 hover:shadow-md cursor-default">
           <p className="text-[10px] font-bold text-text-low uppercase mb-1">Custo Fixo Mensal</p>
           <h3 className="text-xl font-bold text-text-high">{formatMoeda(analise.custoFixoMensalTotal)}<span className="text-sm font-medium text-text-low">/mês</span></h3>
         </div>
-        <div className="bg-primary/5 p-6 rounded-xl border border-primary/20">
+        <div className="bg-primary/5 p-8 rounded-xl border border-primary/20 transition-all hover:scale-105 hover:shadow-md cursor-default">
+          {/* 1. Mudança de título[cite: 21] */}
           <p className="text-[10px] font-bold text-primary uppercase mb-1">
-            {orcamentoMensal !== "" ? "KM Alcançável" : "Simulação (Fixo + Uso)"}
+            {orcamentoMensal !== "" ? "KM Alcançável" : "CUSTO MENSAL"} 
           </p>
           <h3 className="text-xl font-bold text-primary">
             {orcamentoMensal !== "" ? `${analise.kmSimulado.toFixed(0)} km` : formatMoeda(analise.custoTotalMensal)}
             {orcamentoMensal === "" && <span className="text-sm font-medium text-primary/70">/mês</span>}
           </h3>
         </div>
-        <div className="bg-text-high p-6 rounded-xl border border-text-high">
+        <div className="bg-text-high p-8 rounded-xl border border-text-high transition-all hover:scale-105 hover:shadow-md cursor-default">
           <p className="text-[10px] font-bold text-surface/60 uppercase mb-1">Projeção Anual Total</p>
           <h3 className="text-xl font-bold text-surface">{formatMoeda(analise.custoTotalAnual)}<span className="text-sm font-medium text-surface/70">/ano</span></h3>
         </div>
@@ -307,8 +315,8 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
                     <circle
                       key={cat.nome}
                       cx="18" cy="18" r="15.9"
-                      fill="none"           /* <-- Torna o interior vazado para cliques/hovers */
-                      pathLength="100"      /* <-- Normaliza a matemática perfeitamente para 100% */
+                      fill="none"           
+                      pathLength="100"      
                       stroke={CORES_CATEGORIA[cat.nome] || "#9CA3AF"}
                       strokeWidth={isHovered ? "4.5" : "3.5"}
                       strokeDasharray={`${cat.percentual} ${100 - cat.percentual}`}
@@ -347,7 +355,7 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
                 onMouseLeave={() => setCategoriaHover(null)}
               >
                 <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CORES_CATEGORIA[cat.nome] || "#9CA3AF" }} />
-                <span className="text-[10px] font-bold text-text-high">{cat.nome}</span>
+                <span className="text-[10px] font-bold text-text-high">{formatarNomeCategoria(cat.nome)}</span> {/* Usando o helper visual[cite: 21] */}
               </div>
             ))}
           </div>
@@ -365,7 +373,7 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
             <details key={grupo.nome} className="group bg-surface rounded-xl border border-border overflow-hidden">
               <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-background/50 transition-colors list-none">
                 <div>
-                  <h4 className="text-base font-bold text-text-high">{grupo.nome}</h4>
+                  <h4 className="text-base font-bold text-text-high">{formatarNomeCategoria(grupo.nome)}</h4> {/* Aplicando o helper visual[cite: 21] */}
                   <div className="flex gap-3 mt-1.5">
                     {grupo.totalPorKm > 0 && (
                       <span className="inline-flex px-2 py-0.5 rounded-md bg-primary/10 text-[10px] font-bold text-primary">
@@ -385,8 +393,9 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
                   </div>
                 </div>
               </summary>
-
-              <div className="px-5 pb-5 pt-2 border-t border-border/50 bg-background/30 space-y-3">
+              
+              {/* 4. Animação de entrada dos itens do accordion (Tailwind nativo com classes animate)[cite: 21] */}
+              <div className="px-5 pb-5 pt-2 border-t border-border/50 bg-background/30 space-y-3 animate-slide-down origin-top">
                 {grupo.itens.map(item => (
                   <div key={item.id} className="flex justify-between items-center py-2 border-b border-border/40 last:border-0">
                     <span className="text-sm font-medium text-text-high">{item.nome}</span>

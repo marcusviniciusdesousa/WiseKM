@@ -82,7 +82,7 @@ export async function Header() {
         {/* ── Navegação central ────────────────────────────────────── */}
         <nav className="hidden md:flex items-center gap-1">
           <NavLink href="/">Início</NavLink>
-          <NavLink href="/">Sobre Nós</NavLink>
+          <NavLink href="/sobre">Sobre Nós</NavLink>
           {isLoggedIn && <NavLink href="/dashboard">Dashboard</NavLink>}
         </nav>
 

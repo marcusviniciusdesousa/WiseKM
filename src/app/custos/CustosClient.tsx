@@ -16,6 +16,11 @@ type Custo = {
   durabilidadeMeses: number | null;
 };
 
+// HELPER: Formatar "CUSTOS_FIXOS" para o usuário[cite: 21]
+const formatarNomeCategoria = (categoria: string) => {
+  return categoria === "CUSTOS_FIXOS" ? "CUSTOS FIXOS" : categoria;
+};
+
 export function CustosClient({ custosIniciais }: { custosIniciais: Custo[] }) {
   const router = useRouter();
 
@@ -73,6 +78,7 @@ export function CustosClient({ custosIniciais }: { custosIniciais: Custo[] }) {
 
   async function handleSalvar(e: React.FormEvent) {
     e.preventDefault();
+    if (isSalvando) return; // Trava contra duplo submit enquanto a Server Action processa
     setIsSalvando(true);
 
     const valorNum = parseFloat(valorAtual);
@@ -110,7 +116,7 @@ export function CustosClient({ custosIniciais }: { custosIniciais: Custo[] }) {
   }
 
   async function confirmarExclusao() {
-    if (!custoParaExcluir) return;
+    if (!custoParaExcluir || isExcluindo) return; // Trava contra duplo clique
     setIsExcluindo(true);
 
     const result = await excluirCusto(custoParaExcluir.id);
@@ -124,6 +130,7 @@ export function CustosClient({ custosIniciais }: { custosIniciais: Custo[] }) {
   }
 
   async function handleExcluirTodos() {
+    if (isExcluindoTodos) return; // Trava contra duplo clique
     setIsExcluindoTodos(true);
     const result = await excluirTodosCustos();
     
@@ -193,7 +200,8 @@ export function CustosClient({ custosIniciais }: { custosIniciais: Custo[] }) {
                   className="w-full px-6 py-4 bg-background hover:bg-border/20 border-b border-border flex justify-between items-center transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <h2 className="text-base font-bold text-text-high">{categoriaNome}</h2>
+                    {/* Exibe o nome visual formatado[cite: 21] */}
+                    <h2 className="text-base font-bold text-text-high">{formatarNomeCategoria(categoriaNome)}</h2>
                     <span className="text-xs font-bold text-text-low bg-border/40 px-2.5 py-0.5 rounded-full">
                       {lista.length} itens
                     </span>
@@ -291,24 +299,24 @@ export function CustosClient({ custosIniciais }: { custosIniciais: Custo[] }) {
                     <option value="MANUTENCAO">Manutenção</option>
                     <option value="COMBUSTIVEL">Combustivel</option>  
                     <option value="DOCUMENTACAO">Documentação</option>
-                    <option value="CUSTOS_FIXOS">Custos Fixos</option>
+                    <option value="CUSTOS_FIXOS">Custos Fixos</option> {/* Display visual no select[cite: 21] */}
                     <option value="OUTROS">Outros</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-caption font-semibold text-text-high mb-1.5">Valor Atual (R$)</label>
-                  <input required type="number" step="0.01" min="0" value={valorAtual} onChange={e => setValorAtual(e.target.value)} className="w-full px-4 py-3 rounded-md border border-border bg-background text-base" />
+                  <input required type="number" step="0.01" min="0" value={valorAtual} onChange={e => setValorAtual(e.target.value)} onWheel={(e) => (e.target as HTMLElement).blur()} className="w-full px-4 py-3 rounded-md border border-border bg-background text-base" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block text-caption font-semibold text-text-high mb-1.5">Durabilidade (KM)</label>
-                  <input type="number" min="0" value={durabilidadeKm} onChange={e => setDurabilidadeKm(e.target.value)} className="w-full px-4 py-3 rounded-md border border-border bg-background text-base" />
+                  <input type="number" min="0" value={durabilidadeKm} onChange={e => setDurabilidadeKm(e.target.value)} onWheel={(e) => (e.target as HTMLElement).blur()} className="w-full px-4 py-3 rounded-md border border-border bg-background text-base" />
                 </div>
                 <div>
                   <label className="block text-caption font-semibold text-text-high mb-1.5">Durabilidade (Meses)</label>
-                  <input type="number" min="0" value={durabilidadeMeses} onChange={e => setDurabilidadeMeses(e.target.value)} className="w-full px-4 py-3 rounded-md border border-border bg-background text-base" />
+                  <input type="number" min="0" value={durabilidadeMeses} onChange={e => setDurabilidadeMeses(e.target.value)} onWheel={(e) => (e.target as HTMLElement).blur()} className="w-full px-4 py-3 rounded-md border border-border bg-background text-base" />
                 </div>
               </div>
 
