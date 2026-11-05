@@ -46,7 +46,7 @@ export const CATALOGO_MESTRE: ItemCatalogo[] = [
 
   // ── Específicos Moto ─────────────────────────────────────────────────────
   { idItem: "kit_relacao", nome: "Kit Relação (Coroa/Corrente/Pinhão)", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 20000, aplicavelA: ["MOTO"] },
-  { idItem: "oleo_bengala", nome: "Óleo da Bengala (Suspensão)", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 24000, aplicavelA: ["MOTO"] },
+  { idItem: "oleo_bengala", nome: "Óleo da Bengala", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 24000, aplicavelA: ["MOTO"] },
 
   // ── Específicos Caminhão ─────────────────────────────────────────────────
   { idItem: "lonas_freio", nome: "Lonas e Tambores de Freio", categoria: "MANUTENCAO", sugestaoDurabilidadeKm: 60000, aplicavelA: ["CAMINHAO"] },

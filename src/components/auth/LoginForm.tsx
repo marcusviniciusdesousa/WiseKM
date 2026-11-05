@@ -85,14 +85,14 @@ export function LoginForm() {
         </button>
 
         {/* Link esqueci a senha */}
-        <div className="text-center">
+        {/*<div className="text-center">
           <Link
             href="/esqueci-senha"
             className="text-sm text-[#00AEEF] hover:text-[#0099D4] transition-colors"
           >
             Esqueci a senha
           </Link>
-        </div>
+        </div>*/}
       </form>
     </div>
   );

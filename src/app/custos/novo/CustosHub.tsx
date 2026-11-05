@@ -346,7 +346,7 @@ export function CustosHub({ veiculo, nomesCadastrados }: CustosHubProps) {
                     disabled={isSalvando}
                     className="w-full sm:w-auto px-10 py-3 rounded-md font-bold text-white bg-primary hover:bg-primary-hover shadow-sm disabled:opacity-60 transition-all cursor-pointer"
                   >
-                    {isSalvando ? "Salvando..." : "Próximo"}
+                    {isSalvando ? "Salvando..." : "Salvar"}
                   </button>
                 </div>
               </>
