@@ -132,6 +132,7 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
     return {
       custoVariavelPorKm,
       custoFixoMensalTotal,
+      custoVariavelMensal: gastoVariavelMensal,
       custoTotalMensal,
       custoTotalAnual,
       categorias: categoriasFinal,
@@ -146,23 +147,29 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
     texto += `🛣️ Simulação: ${analise.kmSimulado.toFixed(0)} km/mês\n\n`;
     texto += `💰 *DADOS GERAIS*\n`;
     texto += `• Custo por KM: ${formatMoeda(analise.custoVariavelPorKm)}/km\n`;
+    texto += `• Custo Variável Mensal: ${formatMoeda(analise.custoVariavelMensal)}\n`;
     texto += `• Custos Fixos/Mês: ${formatMoeda(analise.custoFixoMensalTotal)}/mês\n`;
-    texto += `• TOTAL MENSAL: ${formatMoeda(analise.custoTotalMensal)}\n`;
-    texto += `• TOTAL ANUAL: ${formatMoeda(analise.custoTotalAnual)}\n\n`;
+    texto += `• TOTAL MENSAL: ${formatMoeda(analise.custoTotalMensal)}\n\n`;
     texto += `🗂️ *MÉTRICAS POR CATEGORIA*\n`;
     
     analise.categorias.forEach(cat => {
-      let taxas = [];
-      if (cat.totalPorKm > 0) taxas.push(`${formatMoeda(cat.totalPorKm)}/km`);
-      if (cat.totalFixoMensal > 0) taxas.push(`${formatMoeda(cat.totalFixoMensal)}/mês`);
-      
-      // Formata nome da categoria na exportação[cite: 21]
-      texto += `• ${formatarNomeCategoria(cat.nome)}: ${taxas.join(" | ")}\n`;
+      if (cat.totalPorKm > 0 && cat.totalFixoMensal > 0) {
+        texto += `• ${formatarNomeCategoria(cat.nome)}: \n`;
+        texto += `          Variável - ${formatMoeda(cat.totalPorKm)}/km \n`;
+        texto += `          Fixo - ${formatMoeda(cat.totalFixoMensal)}/mês \n`;
+      } else if (cat.totalPorKm > 0) {
+        const valorMensalCategoria = cat.totalPorKm * analise.kmSimulado;
+        texto += `• ${formatarNomeCategoria(cat.nome)}: ${formatMoeda(cat.totalPorKm)}/km - ${formatMoeda(valorMensalCategoria)} Mensal\n`;
+      } else if (cat.totalFixoMensal > 0) {
+        texto += `• ${formatarNomeCategoria(cat.nome)}: ${formatMoeda(cat.totalFixoMensal)}/mês\n`;
+      }
     });
 
     navigator.clipboard.writeText(texto);
     setMensagemGlobal({ texto: "Resumo copiado! Cole no seu WhatsApp.", tipo: "success" });
   };
+
+
 
   // Dados para exibir no centro do gráfico interativo
   const infoCentroGrafico = useMemo(() => {
@@ -268,32 +275,45 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
         )}
       </div>
 
-      {/* ── CARDS DE DASHBOARD ─────────────────────────────────────────────── */}
-      {/* 2 e 3. Tamanho de p-6 para p-8, e hover effect scale/shadow[cite: 21] */}
+           {/* ── CARDS DE DASHBOARD ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 1º Card: Custo por KM */}
         <div className="bg-surface p-8 rounded-xl border border-border transition-all hover:scale-105 hover:shadow-md cursor-default">
-          <p className="text-[10px] font-bold text-text-low uppercase mb-1">Custo Variável (Uso)</p>
-          <h3 className="text-xl font-bold text-text-high">{formatMoeda(analise.custoVariavelPorKm)}<span className="text-sm font-medium text-text-low">/km</span></h3>
+          <p className="text-[10px] font-bold text-text-low uppercase mb-1">Custo por KM</p>
+          <h3 className="text-xl font-bold text-text-high">
+            {formatMoeda(analise.custoVariavelPorKm)}<span className="text-sm font-medium text-text-low">/km</span>
+          </h3>
         </div>
+
+        {/* 2º Card: Custo Variável Mensal */}
+        <div className="bg-surface p-8 rounded-xl border border-border transition-all hover:scale-105 hover:shadow-md cursor-default">
+          <p className="text-[10px] font-bold text-text-low uppercase mb-1">Custo Variável Mensal</p>
+          <h3 className="text-xl font-bold text-text-high">
+            {formatMoeda(analise.custoVariavelMensal)}
+          </h3>
+        </div>
+
+        {/* 3º Card: Custo Fixo Mensal */}
         <div className="bg-surface p-8 rounded-xl border border-border transition-all hover:scale-105 hover:shadow-md cursor-default">
           <p className="text-[10px] font-bold text-text-low uppercase mb-1">Custo Fixo Mensal</p>
-          <h3 className="text-xl font-bold text-text-high">{formatMoeda(analise.custoFixoMensalTotal)}<span className="text-sm font-medium text-text-low">/mês</span></h3>
+          <h3 className="text-xl font-bold text-text-high">
+            {formatMoeda(analise.custoFixoMensalTotal)}<span className="text-sm font-medium text-text-low">/mês</span>
+          </h3>
         </div>
+
+        {/* 4º Card: Custo Total Mensal */}
         <div className="bg-primary/5 p-8 rounded-xl border border-primary/20 transition-all hover:scale-105 hover:shadow-md cursor-default">
-          {/* 1. Mudança de título[cite: 21] */}
           <p className="text-[10px] font-bold text-primary uppercase mb-1">
-            {orcamentoMensal !== "" ? "KM Alcançável" : "CUSTO MENSAL"} 
+            {orcamentoMensal !== "" ? "KM Alcançável" : "Custo Total Mensal"} 
           </p>
           <h3 className="text-xl font-bold text-primary">
             {orcamentoMensal !== "" ? `${analise.kmSimulado.toFixed(0)} km` : formatMoeda(analise.custoTotalMensal)}
             {orcamentoMensal === "" && <span className="text-sm font-medium text-primary/70">/mês</span>}
           </h3>
         </div>
-        <div className="bg-text-high p-8 rounded-xl border border-text-high transition-all hover:scale-105 hover:shadow-md cursor-default">
-          <p className="text-[10px] font-bold text-surface/60 uppercase mb-1">Projeção Anual Total</p>
-          <h3 className="text-xl font-bold text-surface">{formatMoeda(analise.custoTotalAnual)}<span className="text-sm font-medium text-surface/70">/ano</span></h3>
-        </div>
       </div>
+
+
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         
