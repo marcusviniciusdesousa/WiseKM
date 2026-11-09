@@ -153,13 +153,13 @@ export function RelatorioClient({ custos }: { custos: Custo[] }) {
     texto += `🗂️ *MÉTRICAS POR CATEGORIA*\n`;
     
     analise.categorias.forEach(cat => {
+      const valorMensalCategoria = cat.totalPorKm * analise.kmSimulado;
       if (cat.totalPorKm > 0 && cat.totalFixoMensal > 0) {
         texto += `• ${formatarNomeCategoria(cat.nome)}: \n`;
-        texto += `          Variável - ${formatMoeda(cat.totalPorKm)}/km \n`;
+        texto += `          Variável - ${formatMoeda(cat.totalPorKm)}/km -> ${formatMoeda(valorMensalCategoria)} Mensal \n`;
         texto += `          Fixo - ${formatMoeda(cat.totalFixoMensal)}/mês \n`;
       } else if (cat.totalPorKm > 0) {
-        const valorMensalCategoria = cat.totalPorKm * analise.kmSimulado;
-        texto += `• ${formatarNomeCategoria(cat.nome)}: ${formatMoeda(cat.totalPorKm)}/km - ${formatMoeda(valorMensalCategoria)} Mensal\n`;
+        texto += `• ${formatarNomeCategoria(cat.nome)}: ${formatMoeda(cat.totalPorKm)}/km -> ${formatMoeda(valorMensalCategoria)} Mensal\n`;
       } else if (cat.totalFixoMensal > 0) {
         texto += `• ${formatarNomeCategoria(cat.nome)}: ${formatMoeda(cat.totalFixoMensal)}/mês\n`;
       }
